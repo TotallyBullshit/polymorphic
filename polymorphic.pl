@@ -7,9 +7,48 @@ use strict;
 $| = 1;
 
 
-my $gl = 'x1';
-my $chrHash = chr 35;
+# Hex chars
+# # = 23
+# { = 7b
+# } = 7d
 
+
+### CUT ###
+# Variable blacklist
+my @bl = qw(
+	chdir
+	chmod
+	chr
+	do
+	file
+	for
+	grep
+	if
+	int
+	lc
+	map
+	my
+	no
+	open
+	ord
+	print
+	printf
+	q
+	qq
+	qw
+	rand
+	sleep
+	split
+	sort
+	stat
+	sub
+	time
+	tr
+	uc
+	use
+	while
+);
+### CUT ###
 
 sub main{
 	
@@ -30,38 +69,53 @@ sub permute{
 	my $s = '';
 	
 	#while(1){ print rs(r(1, 40))."\n"; }
-		
+
+	### CUT ###
 	$s = '#!/usr/bin/perl -w
-		# created
-		
-		
+#		# created
 #		
-#		main();
 #		
-#		sub main{
-#			
-#			my $n0 = 0; for(my $n1 = 0;){ for(my $n2 = 0;){ print "n2 $n0 $n1 $n2"; } print "n1 $n0 $n1"; }
+##		
+##		main();
+##		
+##		sub main{
+##			
+##			my $n0 = 0; for(my $n1 = 0;){ for(my $n2 = 0;){ print "n2 $n0 $n1 $n2"; } print "n1 $n0 $n1"; }
+##		}
+##		
+##		main();
+##		
+#		
+#		my $n = 0;
+#		if(!$n){
+#			print "n = $n\n";
 #		}
+#		print "n = $n\n";
 #		
-#		main();
+#		
+#		
+#		#while(!$n){
+#		#	print "n = $n\n";
+#		#	$n++;
+#		#}
+#		#if($n){
+#		#	print "n = $n\n";
+#		#}
 #		
 		
-		my $n = 0;
-		while(!$n){
-			print "n = $n\n";
-			$n++;
+		my $subname = "abc";
+		
+		my %ssubs = %{$subshref};
+		for my $sub (keys %ssubs){
+			my $newname = $ssubs{$sub}{"newname"};
+			$subname =~ s/$sub/$newname/g;
 		}
-		#while(!$n){
-		#	print "n = $n\n";
-		#	$n++;
-		#}
-		#if($n){
-		#	print "n = $n\n";
-		#}
 		
 	';
+	### CUT ###
 	
-	#$s = fileRead($0);
+	
+	$s = fileRead($0);
 	
 	
 	my $o = '';
@@ -72,26 +126,52 @@ sub permute{
 	
 	
 	my $rc = 0;
+	my $cutter = 0;
 	my @rows = split /\n/, $s;
 	for my $row (@rows){
 		
 		$rc++;
-		#$row =~ s/^([^$chrHash]*)$/$1/;
+		#$row =~ s/^([^\x23]*)$/$1/;
 		
 		
 		if($rc > 2){
 			$row =~ s/^[ \t]+//;
-			if($row ne '' && $row !~ /^$chrHash/){
-				if($row !~ / $/){
-					$row .= ' ';
+			
+			
+			if($row =~ /\x23 CUT \x23/){
+				$cutter = !$cutter;
+			}
+			
+			
+			
+			if(!$cutter){
+				#print "r $rc '$row'\n";
+				
+				if($row ne '' && $row !~ /^\x23/){
+					
+					#map{ } @bl;
+					#my @tbl = grep{
+					#	$row !~ /^print / && $row !~ /^my /
+					#	&& $row =~ /\$/ && $row =~ /$_/
+					#} @bl;
+					#if(@tbl){
+					#	print STDERR "ERROR: Can't parse file in line $rc: '$row' (@tbl)\n";
+					#	exit(1);
+					#}
+					
+					
+					if($row !~ / $/){
+						$row .= ' ';
+					}
+					
+					$o .= $row;
 				}
-				#print "r '$row'\n";
-				$o .= $row;
 			}
 		}
 		
 	}
 	
+	#exit();
 	#print "\n\n";
 	
 	
@@ -186,10 +266,16 @@ sub cmdsexec{
 	my $rv = '';
 	
 	
+	if($plevel >= 10){
+		print STDERR "level can't be >= $plevel\n";
+		exit(1);
+	}
+	
+	
 	t(\$cont);
 	
 	
-	print "$plevel cmdsexec $ptype '$cont'\n\n";
+	print "$plevel cmdsexec '$ptype' '$cont'\n\n";
 	
 	
 	
@@ -415,7 +501,7 @@ sub cmdsexec{
 			#print "$plevel cmd: $cid '$cmd'\n";
 			
 			#if($cmd =~ /^my \$([a-z0-9]+)/i){
-			if($cmd =~ /^sub ([a-z0-9]+)/){
+			if($cmd =~ /^sub ([a-z0-9]+)/i){
 				my $sub = $1;
 				if(!defined $subs{$sub}){
 					$subs{$sub} = {
@@ -439,10 +525,10 @@ sub cmdsexec{
 		my $newcmd = $cmd;
 		t(\$newcmd);
 		
-		#print "$plevel cmd '$newcmd'\n";
+		print "$plevel cmd '$newcmd'\n";
 		
-		if($cmd =~ /^(if|while)(\([^\{]+)/){
-			print "$plevel if/while '$1' '$2' \n";
+		if($cmd =~ /^(if|while)(\([^\x7b]+)(\x7b)/){
+			print "$plevel if/while '$1' '$2' '$3'\n";
 			
 			my $subtype = $1;
 			my $subpre = $2;
@@ -453,10 +539,13 @@ sub cmdsexec{
 			t(\$newcmd);
 			
 			
-			replacePvarsAndLvars($newcmd, \%vars, \%pvars);
+			replacePvarsAndLvars(\$subpre, \%vars, \%pvars);
 			
 			
-			print "$plevel $subtype '$subpre' '$newcmd'  \n";
+			print "$plevel $subtype '$subpre' '$newcmd'  \n\n";
+			
+			#exit();
+			
 			my %newvars = hashMerge(\%vars, \%pvars);
 			$rv .= $subtype.$subpre.'{'."\n".cmdsexec($newcmd, $subtype, \%subs, \%newvars, $plevel + 1)."\n".'}'."\n";
 			
@@ -578,7 +667,7 @@ sub cmdsexec{
 			$newcmd =~ s/\}$//;
 			t(\$newcmd);
 			
-			#print "$plevel for '$forpre' '$newcmd' \n";
+			print "$plevel for '$forpre' '$newcmd' \n";
 			
 			$rv .= $forpre.'{'."\n".cmdsexec($newcmd, 'for', \%subs, \%newvars, $plevel + 1)."\n".'}'."\n";
 				
@@ -595,13 +684,16 @@ sub cmdsexec{
 				my %ssubs = %{$subshref};
 				for my $sub (keys %ssubs){
 					my $newname = $ssubs{$sub}{'newname'};
-					#print "\t$plevel replace  sub1 '$sub(' '$newname(' '$newcmd'\n";
+					
+					
 					$newcmd =~ s/$sub\(/$newname\(/g;
+					
+					print "\t$plevel replace  sub1 '$sub(' '$newname(' '$newcmd'\n";
 				}
 			}
 			
 			
-			replacePvarsAndLvars($newcmd, \%vars, \%pvars);
+			replacePvarsAndLvars(\$newcmd, \%vars, \%pvars);
 			
 			
 			print "$plevel misc '$newcmd' \n";
@@ -625,7 +717,13 @@ sub replacePvarsAndLvars{
 	my($hcmd, $hvars, $hpvars) = @_;
 	
 	my %vars = %{$hvars};
-	my %pvars = %{$hpvars};
+	my %pvars = ();
+	
+	if(defined $hpvars){
+		%pvars = %{$hpvars};
+	}
+	
+	#print "replacePvarsAndLvars '$hcmd' '$$hcmd' \n";
 	
 	my $varshrefc = 0;
 	for my $varshref (\%vars, \%pvars){
@@ -658,8 +756,10 @@ sub replacePvarsAndLvars{
 				
 				if($type eq '%'){
 					$$hcmd =~ s/\$\Q$var\E\{/\$$newname\{/g;
+					#print "\treplacePvarsAndLvars '\$$var' '\$$newname' \n";
 				}
 				$$hcmd =~ s/\Q$type$var\E/$type$newname/g;
+				#print "\treplacePvarsAndLvars '$type$var' '$type$newname' \n";
 			}
 		}
 	}
@@ -703,37 +803,7 @@ sub rs{
 		$rv .= r(1, 1000) <= 900 ? chr((r(1, 1000) <= 800 ? 97 : 65) + int rand 26) : r(1, 9);
 	}
 	
-	my @bl = qw(
-		chdir
-		chmod
-		chr
-		do
-		for
-		grep
-		if
-		int
-		lc
-		map
-		my
-		no
-		ord
-		print
-		printf
-		q
-		qq
-		qw
-		rand
-		sleep
-		split
-		sort
-		stat
-		sub
-		time
-		tr
-		uc
-		use
-		while
-	);
+	
 	if(grep{ $rv =~ /$_/i } @bl){
 		$rv = rs($len);
 	}
