@@ -106,9 +106,9 @@ sub permute{
 		my $subname = "abc";
 		
 		my %ssubs = %{$subshref};
-		for my $sub (keys %ssubs){
-			my $newname = $ssubs{$sub}{"newname"};
-			$subname =~ s/$sub/$newname/g;
+		for my $subId (keys %ssubs){
+			my $newname = $ssubs{$subId}{"newname"};
+			$subname =~ s/$subId/$newname/g;
 		}
 		
 	';
@@ -589,9 +589,9 @@ sub cmdsexec{
 			if($subname ne ''){
 				for my $subshref (\%subs, \%psubs){
 					my %ssubs = %{$subshref};
-					for my $sub (keys %ssubs){
-						my $newname = $ssubs{$sub}{'newname'};
-						$subname =~ s/$sub/$newname/g;
+					for my $subId (keys %ssubs){
+						my $newname = $ssubs{$subId}{'newname'};
+						$subname =~ s/$subId/$newname/g;
 					}
 				}
 			}
@@ -682,13 +682,13 @@ sub cmdsexec{
 			
 			for my $subshref (\%subs, \%psubs){
 				my %ssubs = %{$subshref};
-				for my $sub (keys %ssubs){
-					my $newname = $ssubs{$sub}{'newname'};
+				for my $subId (keys %ssubs){
+					my $newname = $ssubs{$subId}{'newname'};
 					
 					
-					$newcmd =~ s/$sub\(/$newname\(/g;
+					$newcmd =~ s/$subId\(/$newname\(/g;
 					
-					print "\t$plevel replace  sub1 '$sub(' '$newname(' '$newcmd'\n";
+					print "\t$plevel replace  sub1 '$subId(' '$newname(' '$newcmd'\n";
 				}
 			}
 			
