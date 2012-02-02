@@ -74,41 +74,16 @@ sub permute{
 
 	### CUT ###
 	$s = '#!/usr/bin/perl -w
-#		# created
-#		
-#		
-##		
-##		main();
-##		
-##		sub main{
-##			
-##			my $n0 = 0; for(my $n1 = 0;){ for(my $n2 = 0;){ print "n2 $n0 $n1 $n2"; } print "n1 $n0 $n1"; }
-##		}
-##		
-##		main();
-##		
-#		
+		# created
 
-#		
-#		#while(!$n){
-#		#	print "n = $n\n";
-#		#	$n++;
-#		#}
-#		#if($n){
-#		#	print "n = $n\n";
-#		#}
-#		
-		my $xyz = 1;
-		my $n = $xyz;
-		
-		if($n == 1){
-			print "n1 = $n\n";
-		}
-		elsif($n == 2){ print "n2 = $n\n"; }
-		else{
-			print "n3 = $n\n";
-		}
-		
+my $n = 0;
+for(my $i = 0; $i < $n; $i++){
+	my $x = substr $i;
+	print "n = $i $n";
+	
+}
+
+
 	';
 	### CUT ###
 	
@@ -543,7 +518,32 @@ sub cmdsexec{
 		
 		print "$plevel cmd '$newcmd'\n";
 		
-		if($cmd =~ /^(if|elsif|while)(\([^\x7b]+)(\x7b)/){
+		
+		if($cmd =~ /^my ([\$\@\%])([a-z0-9]+)/i){
+			#print "var\n";
+			my $type = $1;
+			my $var = $2;
+			
+			
+			if(!defined $vars{$var}){
+				
+				my $newname = $var.'_'.r(100, 999);
+				
+				$vars{$var} = {
+					'name' => $var,
+					'newname' => $newname,
+					'type' => $type,
+				};
+				#$newcmd =~ s/\Q$type$var\E/$type$newname/g;
+				replacePvarsAndLvars(\$newcmd, \%vars, \%pvars);
+				
+				$rv .= $newcmd."\n";
+				#print "$plevel new var: '$type' '$var' '$type$var' '$type$newname'\n";
+				
+			}
+			
+		}
+		elsif($cmd =~ /^(if|elsif|while)(\([^\x7b]+)(\x7b)/){
 			#print "$plevel if/while '$1' '$2' '$3'\n";
 			
 			my $subtype = $1;
@@ -585,30 +585,6 @@ sub cmdsexec{
 			
 			my %newvars = hashMerge(\%vars, \%pvars);
 			$rv .= 'else{'."\n".cmdsexec($newcmd, $subtype, \%subs, \%newvars, $plevel + 1)."\n".'}'."\n";
-			
-		}
-		elsif($cmd =~ /^my ([\$\@\%])([a-z0-9]+)/i){
-			#print "var\n";
-			my $type = $1;
-			my $var = $2;
-			
-			
-			if(!defined $vars{$var}){
-				
-				my $newname = $var.'_'.r(100, 999);
-				
-				$vars{$var} = {
-					'name' => $var,
-					'newname' => $newname,
-					'type' => $type,
-				};
-				#$newcmd =~ s/\Q$type$var\E/$type$newname/g;
-				replacePvarsAndLvars(\$newcmd, \%vars);
-				
-				$rv .= $newcmd."\n";
-				#print "$plevel new var: '$type' '$var' '$type$var' '$type$newname'\n";
-				
-			}
 			
 		}
 		elsif($cmd =~ /^sub /){
@@ -686,20 +662,15 @@ sub cmdsexec{
 			}
 			#$forpre =~ s/\Q\$$forvar\E/\$$newname/g;
 			
-			for my $var (keys %newvars){
-				my $type = $newvars{$var}{'type'};
-				my $newname = $newvars{$var}{'newname'};
-				
-				if($type eq '%'){
-					$forpre =~ s/\$\Q$var\E\{/\$$newname\{/g;
-					#print "\t$plevel replace hvar2 '\$$var\{' '\$$newname\{' '$forpre'\n";
-					
-				}
-				
-				$forpre =~ s/\Q$type$var\E/$type$newname/g;
-				#print "\t$plevel replace  var2 '$type$var' '$type$newname' '$forpre'\n";
-				
-			}
+#			for my $var (keys %newvars){
+#				my $type = $newvars{$var}{'type'};
+#				my $newname = $newvars{$var}{'newname'};
+#				if($type eq '%'){
+#					$forpre =~ s/\$\Q$var\E\{/\$$newname\{/g;
+#				}
+#				$forpre =~ s/\Q$type$var\E/$type$newname/g;
+#			}
+			replacePvarsAndLvars(\$forpre, \%newvars);
 			
 			$newcmd =~ s/^\{//;
 			$newcmd =~ s/\}$//;
@@ -722,10 +693,7 @@ sub cmdsexec{
 				my %ssubs = %{$subshref};
 				for my $subId (keys %ssubs){
 					my $newname = $ssubs{$subId}{'newname'};
-					
-					
 					$newcmd =~ s/$subId\(/$newname\(/g;
-					
 					print "\t$plevel replace  sub1 '$subId(' '$newname(' '$newcmd'\n";
 				}
 			}
