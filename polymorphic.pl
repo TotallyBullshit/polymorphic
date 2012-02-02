@@ -76,19 +76,24 @@ sub permute{
 	$s = '#!/usr/bin/perl -w
 		# created
 
-my $n = 0;
-for(my $i = 0; $i < $n; $i++){
-	my $x = substr $i;
-	print "n = $i $n";
-	
-}
+#my $n = 0;
+#for(my $i = 0; $i < $n; $i++){
+#	my $x = substr $i;
+#	print "n = $i $n";
+#	
+#}
 
+my $n = 0;
+my $contlen = length $cont;
+for($n = 0; $n < $contlen; $n++){
+	print "n = $i $n";
+}
 
 	';
 	### CUT ###
 	
 	
-	#$s = fileRead($0);
+	$s = fileRead($0);
 	
 	
 	my $o = '';
@@ -251,7 +256,7 @@ sub cmdsexec{
 	print "$plevel cmdsexec '$ptype' '$cont'\n\n";
 	
 	
-	
+	### CUT ###
 #	if($plevel >= 2){
 #		
 #		for my $k (keys %pvars){
@@ -260,7 +265,7 @@ sub cmdsexec{
 #		
 #		return '';
 #	}
-	
+	### CUT ###
 	
 	
 	
@@ -280,8 +285,9 @@ sub cmdsexec{
 	
 	my $contOut = '';
 	
+	my $n = 0;
 	my $contlen = length $cont;
-	for(my $n = 0; $n < $contlen; $n++){
+	for($n = 0; $n < $contlen; $n++){
 		
 		my $c = substr $cont, $n, 1;
 		my $c2 = substr $cont, $n, 2;
@@ -527,7 +533,8 @@ sub cmdsexec{
 			
 			if(!defined $vars{$var}){
 				
-				my $newname = $var.'_'.r(100, 999);
+				#my $newname = $var.'_'.r(100, 999);
+				my $newname = rs(5);
 				
 				$vars{$var} = {
 					'name' => $var,
@@ -542,6 +549,33 @@ sub cmdsexec{
 				
 			}
 			
+		}
+		elsif($cmd =~ /^my\(([^\)]+)\)/i){
+			my $myvars = $1;
+			for my $varname (split /,/, $myvars){
+				t(\$varname);
+				
+				
+				
+				my $type = $1;
+				my $var = '$';
+				
+				
+				if(!defined $vars{$var}){
+					
+					my $newname = rs(5);
+					$vars{$var} = {
+						'name' => $var,
+						'newname' => $newname,
+						'type' => $type,
+					};
+					replacePvarsAndLvars(\$newcmd, \%vars, \%pvars);
+					
+					$rv .= $newcmd."\n";
+					#print "$plevel new var: '$type' '$var' '$type$var' '$type$newname'\n";
+					
+				}
+			}
 		}
 		elsif($cmd =~ /^(if|elsif|while)(\([^\x7b]+)(\x7b)/){
 			#print "$plevel if/while '$1' '$2' '$3'\n";
@@ -756,7 +790,7 @@ sub replacePvarsAndLvars{
 		}
 		
 		
-		
+		$parse = 1;
 		if($parse){
 			my %svars = %{$varshref};
 			for my $var (keys %svars){
