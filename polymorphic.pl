@@ -83,17 +83,27 @@ sub permute{
 #	
 #}
 
+main();
+
+sub main
+ {
 my $n = 0;
 my $contlen = length $cont;
 for($n = 0; $n < $contlen; $n++){
 	print "n = $i $n";
 }
 
+my %h = ();
+for my $k (keys %h){ print "$k $h{$k}"; }
+}
+
+main();
+
 	';
 	### CUT ###
 	
 	
-	$s = fileRead($0);
+	#$s = fileRead($0);
 	
 	
 	my $o = '';
@@ -202,10 +212,74 @@ for($n = 0; $n < $contlen; $n++){
 	}
 	
 	
-	my $o3 = '';
-	$o3 = cmdsexec($o2);
+	my $o3 = $o2;
+	#$o3 = cmdsexec($o2);
+	
+	my %subs = ();
+	while($o3 =~ /sub ([^\x7b]+)/g){
+		my $subname = $1;
+		t(\$subname);
+		
+		
+		if(!defined $subs{$subname}){
+			#print "sub '$subname'\n";
+			
+			my $newname = 'sub_'.r(100, 999).'_'.$subname.'_'.r(100, 999);
+			$subs{$subname} = {
+				'name' => $subname,
+				'newname' => $newname,
+			};
+			
+			#$o3 =~ s/sub $subname/sub $newname/sg;
+		}
+	}
 	
 	
+	my %vars = ();
+	while($o3 =~ /([\$%@])([a-z0-9_]+)/gi){
+		
+		my $vartype = $1;
+		my $varname = $2;
+		
+		
+		
+		if(!defined $vars{$varname}){
+			#print "var $vartype '$varname'\n";
+			
+			my $newname = 'var_'.r(100, 999).'_'.$varname.'_'.r(100, 999);
+			$vars{$varname} = {
+				'name' => $varname,
+				'newname' => $newname,
+				'type' => $vartype,
+			};
+		}
+	}
+	
+	for my $subname (sort{
+		length($a) > length($b)
+	} keys %subs){
+		my $newname = $subs{$subname}{'newname'};
+		print "sub1 '$subname'\n";
+		
+		$o3 =~ s/sub $subname/sub $newname/g;
+		$o3 =~ s/$subname\(/$newname\(/g;
+	}
+	
+	for my $varname (sort{
+		length($a) > length($b)
+	} keys %vars){
+		my $newname = $vars{$varname}{'newname'};
+		my $vartype = $vars{$varname}{'type'};
+		
+		print "var1 $vartype '$varname' '$newname'\n";
+		
+		if($vartype eq '%'){
+			$o3 =~ s/\$$varname\{/\$$newname\{/g;
+		}
+		$o3 =~ s/$vartype$varname/$vartype$newname/g;
+	}
+	#replacePvarsAndLvars(\$o3, \%vars);
+		
 	
 	#$s =~ s/\r//sg;$s =~ s/\n//sg;
 	
@@ -517,238 +591,15 @@ sub cmdsexec{
 	
 	#print "\n";
 	my %vars = ();
+	
+	
 	for my $cmd (@cmds2){
 		
 		my $newcmd = $cmd;
 		t(\$newcmd);
 		
 		print "$plevel cmd '$newcmd'\n";
-		
-		
-		if($cmd =~ /^my ([\$\@\%])([a-z0-9]+)/i){
-			#print "var\n";
-			my $type = $1;
-			my $var = $2;
 			
-			
-			if(!defined $vars{$var}){
-				
-				#my $newname = $var.'_'.r(100, 999);
-				my $newname = rs(5);
-				
-				$vars{$var} = {
-					'name' => $var,
-					'newname' => $newname,
-					'type' => $type,
-				};
-				#$newcmd =~ s/\Q$type$var\E/$type$newname/g;
-				replacePvarsAndLvars(\$newcmd, \%vars, \%pvars);
-				
-				$rv .= $newcmd."\n";
-				#print "$plevel new var: '$type' '$var' '$type$var' '$type$newname'\n";
-				
-			}
-			
-		}
-		elsif($cmd =~ /^my\(([^\)]+)\)/i){
-			my $myvars = $1;
-			for my $varname (split /,/, $myvars){
-				t(\$varname);
-				
-				
-				
-				my $type = $1;
-				my $var = '$';
-				
-				
-				if(!defined $vars{$var}){
-					
-					my $newname = rs(5);
-					$vars{$var} = {
-						'name' => $var,
-						'newname' => $newname,
-						'type' => $type,
-					};
-					replacePvarsAndLvars(\$newcmd, \%vars, \%pvars);
-					
-					$rv .= $newcmd."\n";
-					#print "$plevel new var: '$type' '$var' '$type$var' '$type$newname'\n";
-					
-				}
-			}
-		}
-		elsif($cmd =~ /^(if|elsif|while)(\([^\x7b]+)(\x7b)/){
-			#print "$plevel if/while '$1' '$2' '$3'\n";
-			
-			my $subtype = $1;
-			my $subpre = $2;
-			
-			$newcmd =~ s/^\Q$subtype$subpre\E\{//;
-			$newcmd =~ s/\}$//;
-			
-			t(\$newcmd);
-			
-			
-			replacePvarsAndLvars(\$subpre, \%vars, \%pvars);
-			
-			
-			print "$plevel $subtype '$subpre' '$newcmd'  \n\n";
-			
-			#exit();
-			
-			my %newvars = hashMerge(\%vars, \%pvars);
-			$rv .= $subtype.$subpre.'{'."\n".cmdsexec($newcmd, $subtype, \%subs, \%newvars, $plevel + 1)."\n".'}'."\n";
-			
-		}
-		elsif($cmd =~ /^else\x7b/){
-			#print "$plevel if/while '$1' '$2' '$3'\n";
-			
-			my $subtype = $1;
-			my $subpre = $2;
-			
-			$newcmd =~ s/^else\x7b//;
-			$newcmd =~ s/\x7d$//;
-			
-			t(\$newcmd);
-			
-			
-			
-			print "$plevel else '$newcmd'  \n\n";
-			
-			#exit();
-			
-			my %newvars = hashMerge(\%vars, \%pvars);
-			$rv .= 'else{'."\n".cmdsexec($newcmd, $subtype, \%subs, \%newvars, $plevel + 1)."\n".'}'."\n";
-			
-		}
-		elsif($cmd =~ /^sub /){
-			#print "$plevel sub '$newcmd' \n";
-			#for my $sub (keys %subs){
-			#	my $newname = $subs{$sub}{'newname'};
-			#	$newcmd =~ s/sub $sub/sub $newname/;
-			#}
-			
-			my $subname = '';
-			
-			if($newcmd =~ s/sub ([^\{]+)\{//){
-				$subname = $1;
-			}
-			
-			if($subname ne ''){
-				for my $subshref (\%subs, \%psubs){
-					my %ssubs = %{$subshref};
-					for my $subId (keys %ssubs){
-						my $newname = $ssubs{$subId}{'newname'};
-						$subname =~ s/$subId/$newname/g;
-					}
-				}
-			}
-			
-			$newcmd =~ s/\}$//;
-			
-			t(\$newcmd);
-			
-			my %newvars = hashMerge(\%vars, \%pvars);
-			
-			#($cont, $ptype, $hpsubs, $hpvars, $level)
-			#$rv .= 'sub '.$subname.'{'."\n".cmdsexec($newcmd, 'sub', \%subs, \%vars, $plevel + 1)."\n".'}';
-			$rv .= 'sub '.$subname.'{'."\n".cmdsexec($newcmd, 'sub', \%subs, \%newvars, $plevel + 1)."\n".'}';
-			
-		}
-		elsif($cmd =~ /^for/){
-			
-			my $forpre = '';
-			my $forvar = '';
-			
-			if($newcmd =~ s/(for my [^\{]+)//){
-				$forpre = $1;
-				
-				if($forpre =~ /for my \$([^\(]+)/){
-					$forvar = $1;
-				}
-			}
-			elsif($newcmd =~ s/(for.my .([^\{]+))// ){
-				
-				$forpre = $1;
-				
-				if($forpre =~ /for.my .([^=]+)/){
-					$forvar = $1;
-				}
-				
-			}
-			elsif($newcmd =~ s/(for.[^\{]+)//){
-				$forpre = $1;
-				#print "exit '$1' \n";exit();
-			}
-			
-			
-			t(\$forvar);
-			#print "$plevel for '$forpre' '$forvar'\n";
-			
-			
-			my %newvars = hashMerge(\%vars, \%pvars);
-			if($forvar ne ''){
-				$newvars{$forvar} = {
-					'name' => $forvar,
-					'newname' => $forvar.'_'.r(100, 999),
-					'type' => '$',
-				};
-			}
-			#$forpre =~ s/\Q\$$forvar\E/\$$newname/g;
-			
-#			for my $var (keys %newvars){
-#				my $type = $newvars{$var}{'type'};
-#				my $newname = $newvars{$var}{'newname'};
-#				if($type eq '%'){
-#					$forpre =~ s/\$\Q$var\E\{/\$$newname\{/g;
-#				}
-#				$forpre =~ s/\Q$type$var\E/$type$newname/g;
-#			}
-			replacePvarsAndLvars(\$forpre, \%newvars);
-			
-			$newcmd =~ s/^\{//;
-			$newcmd =~ s/\}$//;
-			t(\$newcmd);
-			
-			print "$plevel for '$forpre' '$newcmd' \n";
-			
-			$rv .= $forpre.'{'."\n".cmdsexec($newcmd, 'for', \%subs, \%newvars, $plevel + 1)."\n".'}'."\n";
-				
-			
-			
-			
-			
-		}
-		#elsif($cmd =~ /^while/){}
-		else{
-			
-			
-			for my $subshref (\%subs, \%psubs){
-				my %ssubs = %{$subshref};
-				for my $subId (keys %ssubs){
-					my $newname = $ssubs{$subId}{'newname'};
-					$newcmd =~ s/$subId\(/$newname\(/g;
-					print "\t$plevel replace  sub1 '$subId(' '$newname(' '$newcmd'\n";
-				}
-			}
-			
-			
-			replacePvarsAndLvars(\$newcmd, \%vars, \%pvars);
-			
-			
-			print "$plevel misc '$newcmd' \n";
-			
-			
-			
-			#print "\n";
-			
-			$rv .= $newcmd."\n";
-		}
-		
-		#print "\tcmd '$newcmd'\n\n";
-		
-		print "\n";
-		
 	}
 	
 	
