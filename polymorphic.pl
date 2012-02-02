@@ -20,6 +20,8 @@ my @bl = qw(
 	chmod
 	chr
 	do
+	else
+	elsif
 	file
 	for
 	grep
@@ -86,13 +88,7 @@ sub permute{
 ##		main();
 ##		
 #		
-#		my $n = 0;
-#		if(!$n){
-#			print "n = $n\n";
-#		}
-#		print "n = $n\n";
-#		
-#		
+
 #		
 #		#while(!$n){
 #		#	print "n = $n\n";
@@ -102,20 +98,22 @@ sub permute{
 #		#	print "n = $n\n";
 #		#}
 #		
+		my $xyz = 1;
+		my $n = $xyz;
 		
-		my $subname = "abc";
-		
-		my %ssubs = %{$subshref};
-		for my $subId (keys %ssubs){
-			my $newname = $ssubs{$subId}{"newname"};
-			$subname =~ s/$subId/$newname/g;
+		if($n == 1){
+			print "n1 = $n\n";
+		}
+		elsif($n == 2){ print "n2 = $n\n"; }
+		else{
+			print "n3 = $n\n";
 		}
 		
 	';
 	### CUT ###
 	
 	
-	$s = fileRead($0);
+	#$s = fileRead($0);
 	
 	
 	my $o = '';
@@ -378,6 +376,24 @@ sub cmdsexec{
 				$c = $c2;
 				$isLoop = 1;
 			}
+			elsif($c5 eq 'elsif'){
+				$n += 4;
+				
+				if($level == 0){
+					$cmdid++;
+				}
+				$c = $c5;
+				$isSub = 1;
+			}
+			elsif($c4 eq 'else'){
+				$n += 3;
+				
+				if($level == 0){
+					$cmdid++;
+				}
+				$c = $c4;
+				$isSub = 1;
+			}
 			elsif($c4 eq 'sub '){
 				$n += 3;
 				
@@ -527,8 +543,8 @@ sub cmdsexec{
 		
 		print "$plevel cmd '$newcmd'\n";
 		
-		if($cmd =~ /^(if|while)(\([^\x7b]+)(\x7b)/){
-			print "$plevel if/while '$1' '$2' '$3'\n";
+		if($cmd =~ /^(if|elsif|while)(\([^\x7b]+)(\x7b)/){
+			#print "$plevel if/while '$1' '$2' '$3'\n";
 			
 			my $subtype = $1;
 			my $subpre = $2;
@@ -550,6 +566,27 @@ sub cmdsexec{
 			$rv .= $subtype.$subpre.'{'."\n".cmdsexec($newcmd, $subtype, \%subs, \%newvars, $plevel + 1)."\n".'}'."\n";
 			
 		}
+		elsif($cmd =~ /^else\x7b/){
+			#print "$plevel if/while '$1' '$2' '$3'\n";
+			
+			my $subtype = $1;
+			my $subpre = $2;
+			
+			$newcmd =~ s/^else\x7b//;
+			$newcmd =~ s/\x7d$//;
+			
+			t(\$newcmd);
+			
+			
+			
+			print "$plevel else '$newcmd'  \n\n";
+			
+			#exit();
+			
+			my %newvars = hashMerge(\%vars, \%pvars);
+			$rv .= 'else{'."\n".cmdsexec($newcmd, $subtype, \%subs, \%newvars, $plevel + 1)."\n".'}'."\n";
+			
+		}
 		elsif($cmd =~ /^my ([\$\@\%])([a-z0-9]+)/i){
 			#print "var\n";
 			my $type = $1;
@@ -565,7 +602,8 @@ sub cmdsexec{
 					'newname' => $newname,
 					'type' => $type,
 				};
-				$newcmd =~ s/\Q$type$var\E/$type$newname/g;
+				#$newcmd =~ s/\Q$type$var\E/$type$newname/g;
+				replacePvarsAndLvars(\$newcmd, \%vars);
 				
 				$rv .= $newcmd."\n";
 				#print "$plevel new var: '$type' '$var' '$type$var' '$type$newname'\n";
@@ -706,6 +744,9 @@ sub cmdsexec{
 		}
 		
 		#print "\tcmd '$newcmd'\n\n";
+		
+		print "\n";
+		
 	}
 	
 	
