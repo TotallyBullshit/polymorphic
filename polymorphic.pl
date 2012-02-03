@@ -241,7 +241,9 @@ main();
 		my $vartype = $1;
 		my $varname = $2;
 		
-		
+		if($varname =~ /[ab1-4]/){
+			next;
+		}
 		
 		if(!defined $vars{$varname}){
 			#print "var $vartype '$varname'\n";
@@ -282,6 +284,9 @@ main();
 	}
 	#replacePvarsAndLvars(\$o3, \%vars);
 		
+	$o3 =~ s/;/;\n/sg;
+	$o3 =~ s/\}/\}\n/sg;
+	$o3 =~ s/\{/\{\n/sg;
 	
 	#$s =~ s/\r//sg;$s =~ s/\n//sg;
 	
