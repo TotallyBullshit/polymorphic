@@ -57,7 +57,7 @@ sub main{
 	print "start\n\n";
 	
 	
-	#while(1){ print "".t()."\n"; sleep 1; }
+	#while(1){ print "".strTrim()."\n"; sleep 1; }
 	
 	permute();
 	
@@ -70,7 +70,7 @@ sub permute{
 	
 	my $s = '';
 	
-	#while(1){ print rs(r(1, 40))."\n"; }
+	#while(1){ print strRand(numberRand(1, 40))."\n"; }
 
 	### CUT ###
 	$s = '#!/usr/bin/perl -w
@@ -110,7 +110,7 @@ main();
 	
 	
 	$s =~ s/\r//sg;
-	t(\$s);
+	strTrim(\$s);
 	
 	
 	my $rc = 0;
@@ -159,7 +159,7 @@ main();
 		
 	}
 	
-	#exit();
+	#existrTrim();
 	#print "\n\n";
 	
 	
@@ -218,13 +218,13 @@ main();
 	my %subs = ();
 	while($o3 =~ /sub ([a-z0-9]+)/ig){
 		my $subname = $1;
-		t(\$subname);
+		strTrim(\$subname);
 		
 		
 		if(!defined $subs{$subname}){
 			#print "sub '$subname'\n";
 			
-			my $newname = 'sub_'.r(100, 999).'_'.$subname.'_'.r(100, 999);
+			my $newname = 'sub_'.numberRand(100, 999).'_'.$subname.'_'.numberRand(100, 999);
 			$subs{$subname} = {
 				'name' => $subname,
 				'newname' => $newname,
@@ -248,7 +248,7 @@ main();
 		if(!defined $vars{$varname}){
 			#print "var $vartype '$varname'\n";
 			
-			my $newname = 'var_'.r(100, 999).'_'.$varname.'_'.r(100, 999);
+			my $newname = 'var_'.numberRand(100, 999).'_'.$varname.'_'.numberRand(100, 999);
 			$vars{$varname} = {
 				'name' => $varname,
 				'newname' => $newname,
@@ -298,6 +298,7 @@ main();
 	
 }
 
+# Read a file
 sub fileRead{
 	my($f) = @_;
 	my $s = '';
@@ -309,6 +310,7 @@ sub fileRead{
 	$s;
 }
 
+# Write a file
 sub fileWrite{
 	my($f, $c) = @_;
 	open F, '>', $f;
@@ -317,34 +319,34 @@ sub fileWrite{
 }
 
 # Random number: min, max
-sub r{
+sub numberRand{
 	my($mi, $ma) = @_;
 	int($mi + int rand($ma - $mi + 1));
 }
 
 # Random string
-sub rs{
+sub strRand{
 	my($len) = @_;
 	my $rv = '';
 	
 	my $nlen = $len;
 	$nlen--;
-	$rv .= chr((r(1, 1000) <= 800 ? 97 : 65) + int rand 26);
+	$rv .= chr((numberRand(1, 1000) <= 800 ? 97 : 65) + int rand 26);
 	
 	for(my $n = 0; $n < $nlen; $n++){
-		$rv .= r(1, 1000) <= 900 ? chr((r(1, 1000) <= 800 ? 97 : 65) + int rand 26) : r(1, 9);
+		$rv .= numberRand(1, 1000) <= 900 ? chr((numberRand(1, 1000) <= 800 ? 97 : 65) + int rand 26) : numberRand(1, 9);
 	}
 	
 	
 	if(grep{ $rv =~ /$_/i } @bl){
-		$rv = rs($len);
+		$rv = strRand($len);
 	}
 	
 	$rv;
 }
 
-# Trim
-sub t{
+# Trim String
+sub strTrim{
 	my($r) = @_;
 	
 	$$r =~ s/^ +//s;
