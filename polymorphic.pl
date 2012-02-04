@@ -159,6 +159,7 @@ main();
 			$subs{$subname} = {
 				'name' => $subname,
 				'newname' => $newname,
+				'content' => '',
 			};
 			
 		}
@@ -195,6 +196,7 @@ main();
 	# TODO: Mix subs
 	my $out3 = '';
 	my $level = 0;
+	my $thissub = '';
 	
 	while(length $out > 0){
 		my $char = substr $out, 0, 1;
@@ -211,12 +213,24 @@ main();
 			$level--;
 		}
 		
-		if($level == 0 && $out =~ /^(sub ([a-z0-9][^\{]*)\{)/si){
+		if($level == 0 && $out =~ /^(sub ([a-z0-9][^\{]*))\{/si){
 			
-			print "sub '$1' '$2'\n";
-			print "neu '".substr($out, 0, 10)."' \n\n";
-			#$out = substr $out, 1;
+			$out = substr $out, length($1);
+			
+			
+			#print "neu '".substr($out, 0, 10)."' \n\n";
+			
+			$thissub = $2;
+			strTrim(\$thissub);
+			print "sub ".length($1)." '$1' '$thissub'  \n";
+			
 		}
+		else{
+			if($thissub ne ''){
+				$subs{$thissub}{'content'} .= $char;
+			}
+		}
+		
 		
 		#print "char: ".(length $out)." $level ".("\t" x $level)." '$char' \n";
 		
@@ -224,6 +238,10 @@ main();
 	}
 	
 	
+	
+	for my $subname (keys %subs){
+		print "sub '$subname' '$subs{$subname}{'content'}' \n";
+	}
 	
 	
 	print "\n\n$out3";
