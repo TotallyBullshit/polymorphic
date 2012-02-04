@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 # Created @ 21.01.2012 by TheFox@fox21.at
 # Polymorphic Perl Script
-# Version: 1.0.0
+# Version: 1.1.0
 # Generation: 0
 
 use strict;
@@ -77,14 +77,38 @@ sub permute{
 use strict;
 $| = 1;
 
-my $x = 0;
-print "\t$x\n";
+main();
+
+sub main{
+	if(){bbllla}
+}
+
+sub a2{}
+sub a3{
+}
+sub a4 {
+}
+sub a5 			 {
+}
+sub a6
+{
+}
+sub a7
+ {
+}
+sub a8
+		{
+}
+
+
+
+main();
 
 	';
 	### CUT ###
 	
 	
-	$source = fileRead($0);
+	#$source = fileRead($0);
 	strTrim(\$source);
 	
 	# Read row by row.
@@ -118,11 +142,11 @@ print "\t$x\n";
 	print "generation: $generation\n";
 	
 	
-	my $out3 = $out;
+	
 	
 	# Collect subs.
 	my %subs = ();
-	while($out3 =~ /sub ([a-z0-9_]+)/ig){
+	while($out =~ /sub ([a-z0-9_]+)/ig){
 		my $subname = $1;
 		strTrim(\$subname);
 		
@@ -142,7 +166,7 @@ print "\t$x\n";
 	
 	# Collect variables.
 	my %vars = ();
-	while($out3 =~ /([\$\%\x40])([a-z0-9_]+)/ig){
+	while($out =~ /([\$\%\x40])([a-z0-9_]+)/ig){
 		
 		my $vartype = $1;
 		my $varname = $2;
@@ -169,6 +193,41 @@ print "\t$x\n";
 	}
 	
 	# TODO: Mix subs
+	my $out3 = '';
+	my $level = 0;
+	
+	while(length $out > 0){
+		my $char = substr $out, 0, 1;
+		
+		$out = substr $out, 1;
+		
+		if($char eq '{'){
+			$level++;
+		}
+		
+		
+		
+		if($char eq '}'){
+			$level--;
+		}
+		
+		if($level == 0 && $out =~ /^(sub ([a-z0-9][^\{]*)\{)/si){
+			
+			print "sub '$1' '$2'\n";
+			print "neu '".substr($out, 0, 10)."' \n\n";
+			#$out = substr $out, 1;
+		}
+		
+		#print "char: ".(length $out)." $level ".("\t" x $level)." '$char' \n";
+		
+		#sleep 1;
+	}
+	
+	
+	
+	
+	print "\n\n$out3";
+	exit();
 	
 	# Substitute subs.
 	my @subskeys = keys %subs;
@@ -282,6 +341,9 @@ sub strTrim{
 	
 	$$strRef =~ s/^\n+//s;
 	$$strRef =~ s/\n+$//s;
+	
+	$$strRef =~ s/^\t+//s;
+	$$strRef =~ s/\t+$//s;
 	
 	$$strRef =~ s/\r//sg;
 	
