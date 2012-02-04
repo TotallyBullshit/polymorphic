@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 # Created @ 21.01.2012 by TheFox@fox21.at
 # Polymorphic Perl Script
-# Version: 0.2.0
+# Version: 1.0.0
+# Generation: 0
 
 use strict;
 
@@ -12,7 +13,6 @@ $| = 1;
 # # = 23
 # { = 7b
 # } = 7d
-
 
 
 # Variable blacklist
@@ -57,9 +57,6 @@ sub main{
 	
 	print "start\n\n";
 	
-	
-	#while(1){ print "".strTrim()."\n"; sleep 1; }
-	
 	permute();
 	
 	print "\n\nend\n";
@@ -70,8 +67,6 @@ sub permute{
 	print "permute $0\n";
 	
 	my $source = '';
-	
-	#while(1){ print strRand(numberRand(1, 40))."\n"; }
 
 	### CUT ###
 	$source = '#!/usr/bin/perl -w
@@ -89,19 +84,12 @@ print "\t$x\n";
 	### CUT ###
 	
 	
-	
 	$source = fileRead($0);
-	#$source = fileRead($0.'.pl');
-	
-	
-	my $out = '';
-	
-	
-	
 	strTrim(\$source);
 	
-	
 	# Read row by row.
+	my $generation = 0;
+	my $out = '';
 	my $rowCounter = 0;
 	my $cutter = 0;
 	my @rows = split /\n/, $source;
@@ -120,17 +108,17 @@ print "\t$x\n";
 					
 					$out .= $row;
 				}
+				elsif($row =~ /G\x65n\x65ration: (\d+)/){
+					$generation = 1 + int $1;
+				}
 			}
 		}
+		
 	}
-	
-	#existrTrim();
-	#print "\n\n";
-	
+	print "generation: $generation\n";
 	
 	
 	my $out3 = $out;
-	#$out3 = cmdsexec($out2);
 	
 	# Collect subs.
 	my %subs = ();
@@ -138,19 +126,17 @@ print "\t$x\n";
 		my $subname = $1;
 		strTrim(\$subname);
 		
-		
 		if(!defined $subs{$subname}){
 			#print "sub '$subname'\n";
 			
 			my $newname = '';
 			#$newname = 'sub_'.numberRand(100, 999).'_'.$subname.'_'.numberRand(100, 999);
-			$newname = strRand(numberRand(2, 128));
+			$newname = strRand(numberRand(3, 64));
 			$subs{$subname} = {
 				'name' => $subname,
 				'newname' => $newname,
 			};
 			
-			#$out3 =~ s/sub $subname/sub $newname/sg;
 		}
 	}
 	
@@ -161,9 +147,6 @@ print "\t$x\n";
 		my $vartype = $1;
 		my $varname = $2;
 		
-		#print "var coll: '$vartype' '$varname' \n";
-		
-		#if( ($vartype eq '$' && $varname =~ /^[ab0-9]$/) || $varname eq '_' || $varname eq '|' ){
 		if( length $varname <= 2){
 			print "skip var: '$vartype' '$varname' \n";
 			next;
@@ -174,63 +157,47 @@ print "\t$x\n";
 			my $newname = '';
 			#$newname = 'var_'.numberRand(100, 999).'_'.$varname.'_'.numberRand(100, 999);
 			#$newname = 'var_'.numberRand(100, 999).'_'.$varname;
-			$newname = strRand(numberRand(2, 128));
+			$newname = strRand(numberRand(3, 64));
 			$vars{$varname} = {
 				'name' => $varname,
 				'newname' => $newname,
 				'type' => $vartype,
 			};
 			
-			#print "\t\t\t\t\tnew: $newname\n";
 		}
-		#else{ print "\told: $vars{$varname}{'newname'}\n"; }
-		#print "\n";
 		
-		#sleep 1;
 	}
-	print "\n";
 	
 	# TODO: Mix subs
 	
 	# Substitute subs.
 	my @subskeys = keys %subs;
-	print "\nsubs ".@subskeys."\n";
+	print "\n\nsubs ".@subskeys."\n";
 	for my $subname (reverse sort{
 		length($a) <=> length($b)
 	} @subskeys){
 		my $newname = $subs{$subname}{'newname'};
 		
-		
 		$out3 =~ s/sub $subname/sub $newname/g;
 		print "sub1 'sub $subname' 'sub $newname'\n";
 		
 		$out3 =~ s/$subname\(/$newname\(/g;
-		#print "sub1 '$subname(' '$newname('\n\n";
-		
 	}
 	
 	# Substitute variables.
 	my @varskeys = keys %vars;
-	print "\nvars ".@varskeys."\n";
+	print "\n\nvars ".@varskeys."\n";
 	for my $varname (reverse sort{
 		length($a) <=> length($b)
 	} @varskeys){
 		my $newname = $vars{$varname}{'newname'};
 		my $vartype = $vars{$varname}{'type'};
 		
-		#if($vartype eq '%'){
-		#	$out3 =~ s/\$$varname\{/\$$newname\{/sg;
-		#	print "var $vartype '\$$varname\{' '\$$newname\{'\n";
-		#}
-		#$out3 =~ s/\Q$vartype\E$varname/$vartype$newname/sg;
-		
 		$out3 =~ s/([\$\%\x40])$varname/$1$newname/sg;
 		
 		print "var $vartype '$vartype$varname' '$vartype$newname'\n";
 		
-		#print "$out3\n\n"; sleep 1;
 	}
-	#replacePvarsAndLvars(\$out3, \%vars);
 	
 	
 	numberRand(1, 9999) >= 5000 ? $out3 =~ s/\\x0a/\\n/sg : $out3 =~ s/\\n/\\x0a/sg;
@@ -240,12 +207,11 @@ print "\t$x\n";
 	#$out3 =~ s/;/;\n/sg;$out3 =~ s/\}/\}\n/sg;$out3 =~ s/\{/\{\n/sg;
 	#$out3 =~ s/(sub [0-9a-z]+)/\n\n\n$1/sig;
 	
-	#$source =~ s/\r//sg;$s =~ s/\n//sg;
 	
 	#print "\n\nout\n$out3\n";
 	
 	my $outPath = $0.'.pl';
-	fileWrite($outPath, "\x23!/usr/bin/perl -w\n\x23 Created by TheFox\x40fox21.at\n\x23 ".time()."\n\n".$out3);
+	fileWrite($outPath, "\x23!/usr/bin/perl -w\n\x23 Created by TheFox\x40fox21.at\n\x23 Generation: $generation\n\x23 ".time()."\n\n".$out3);
 	chmod 0755, $outPath;
 	
 	$outPath;
@@ -284,7 +250,7 @@ sub strRand{
 		$level = 0;
 	}
 	if($level >= 98){
-		return 'TheFoxStrikesBack';
+		return "TheFoxStrikesB\x61ck".numberRand(1, 999);
 	}
 	
 	my $retVal = '';
@@ -321,22 +287,6 @@ sub strTrim{
 	
 }
 
-# Merge two hashes to one
-sub hashMerge{
-	my($hashref1, $hashref2) = @_;
-	my %retVal = ();
-	
-	for my $hashref ($hashref1, $hashref2){
-		if(defined $hashref){
-			my %hash = %{$hashref};
-			for my $key (keys %hash){
-				$retVal{$key} = $hash{$key};
-			}
-		}
-	}
-	
-	%retVal;
-}
 
 
 main();
