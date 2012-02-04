@@ -13,44 +13,44 @@ $| = 1;
 # } = 7d
 
 
-### CUT ###
+
 # Variable blacklist
-my @bl = qw(
-	chdir
-	chmod
-	chr
-	do
-	else
-	elsif
-	file
-	for
-	grep
-	if
-	int
-	lc
-	map
-	my
-	no
-	open
-	ord
-	print
-	printf
-	q
-	qq
-	qw
-	rand
-	sleep
-	split
-	sort
-	stat
-	sub
-	time
-	tr
-	uc
-	use
-	while
+my @bl = (
+	'chdir',
+	'chmod',
+	'chr',
+	'do',
+	'else',
+	'elsif',
+	'file',
+	'for',
+	'grep',
+	'if',
+	'int',
+	'lc',
+	'map',
+	'my',
+	'no',
+	'open',
+	'ord',
+	'print',
+	'printf',
+	'q',
+	'qq',
+	'qw',
+	'rand',
+	'sleep',
+	'split',
+	'sort',
+	'stat',
+	'sub',
+	'time',
+	'tr',
+	'uc',
+	'use',
+	'while',
 );
-### CUT ###
+
 
 sub main{
 	
@@ -215,8 +215,9 @@ main();
 	my $o3 = $o2;
 	#$o3 = cmdsexec($o2);
 	
+	# Collect subs.
 	my %subs = ();
-	while($o3 =~ /sub ([a-z0-9]+)/ig){
+	while($o3 =~ /sub ([a-z0-9_]+)/ig){
 		my $subname = $1;
 		strTrim(\$subname);
 		
@@ -234,21 +235,22 @@ main();
 		}
 	}
 	
-	
+	# Collect variables.
 	my %vars = ();
-	while($o3 =~ /([\$%@])([a-z0-9_]+)/gi){
+	while($o3 =~ /([\$\%\x40])([a-z0-9_]+)/ig){
 		
 		my $vartype = $1;
 		my $varname = $2;
 		
-		if($varname =~ /[ab1-4]/){
+		if( ($vartype eq '$' && $varname =~ /[ab0-9]/) || ($varname eq '_') ){
 			next;
 		}
 		
 		if(!defined $vars{$varname}){
-			#print "var $vartype '$varname'\n";
-			
-			my $newname = 'var_'.numberRand(100, 999).'_'.$varname.'_'.numberRand(100, 999);
+						
+			my $newname = '';
+			#$newname = 'var_'.numberRand(100, 999).'_'.$varname.'_'.numberRand(100, 999);
+			$newname = 'var_'.numberRand(1, 9).'_'.$varname;
 			$vars{$varname} = {
 				'name' => $varname,
 				'newname' => $newname,
@@ -257,45 +259,56 @@ main();
 		}
 	}
 	
+	# Substitute subs.
+	my @subskeys = keys %subs;
+	print "subs ".@subskeys."\n";
 	for my $subname (reverse sort{
 		length($a) <=> length($b)
-	} keys %subs){
+	} @subskeys){
 		my $newname = $subs{$subname}{'newname'};
-		print "sub1 '$subname'\n";
+		
 		
 		$o3 =~ s/sub $subname/sub $newname/g;
+		print "sub1 'sub $subname' 'sub $newname'\n";
+		
 		$o3 =~ s/$subname\(/$newname\(/g;
+		#print "sub1 '$subname(' '$newname('\n\n";
+		
 	}
 	
+	# Substitute variables.
+	my @varskeys = keys %vars;
+	print "vars ".@varskeys."\n";
 	for my $varname (reverse sort{
 		length($a) <=> length($b)
-	} keys %vars){
+	} @varskeys){
 		my $newname = $vars{$varname}{'newname'};
 		my $vartype = $vars{$varname}{'type'};
 		
-		print "var1 $vartype '$varname' '$newname'\n";
-		
 		if($vartype eq '%'){
 			$o3 =~ s/\$$varname\{/\$$newname\{/sg;
+			#print "var1 $vartype '\$$varname\{' '\$$newname\{'\n";
 		}
 		$o3 =~ s/\Q$vartype\E$varname/$vartype$newname/sg;
+		print "var1 $vartype '$vartype$varname' '$vartype$newname'\n";
 		
 		#print "$o3\n\n"; sleep 1;
 	}
 	#replacePvarsAndLvars(\$o3, \%vars);
 		
-	$o3 =~ s/;/;\n/sg;
-	$o3 =~ s/\}/\}\n/sg;
-	$o3 =~ s/\{/\{\n/sg;
+	#$o3 =~ s/;/;\n/sg;
+	#$o3 =~ s/\}/\}\n/sg;$o3 =~ s/\{/\{\n/sg;
+	#$o3 =~ s/(sub [0-9a-z]+)/\n\n\n$1/sig;
 	
 	#$s =~ s/\r//sg;$s =~ s/\n//sg;
 	
 	#print "\n\nout\n$o3\n";
 	
 	my $f = $0.'.pl';
-	fileWrite($f, "#!/usr/bin/perl -w\n# Created by TheFox\x40fox21.at\n\n".$o3);
-	#chmod 0755, $f;
+	fileWrite($f, "\x23!/usr/bin/perl -w\n\x23 Created by TheFox\x40fox21.at\n\x23 ".time()."\n\n".$o3);
+	chmod 0755, $f;
 	
+	$f;
 }
 
 # Read a file
@@ -359,18 +372,18 @@ sub strTrim{
 # Merge two hashes to one
 sub hashMerge{
 	my($hr1, $hr2) = @_;
-	my %rv = ();
+	my %rv222 = ();
 	
 	for my $hr ($hr1, $hr2){
 		if(defined $hr){
 			my %h = %{$hr};
 			for my $k (keys %h){
-				$rv{$k} = $h{$k};
+				$rv222{$k} = $h{$k};
 			}
 		}
 	}
 	
-	%rv;
+	%rv222;
 }
 
 
