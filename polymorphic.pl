@@ -5,6 +5,7 @@
 # Generation: 0
 
 use strict;
+#use Time::HiRes qw(usleep);
 
 $| = 1;
 
@@ -13,6 +14,9 @@ $| = 1;
 # # = 23
 # { = 7b
 # } = 7d
+# ; = 3b
+# \n = 0a
+# a = 61
 
 
 # Variable blacklist
@@ -77,34 +81,25 @@ sub permute{
 use strict;
 $| = 1;
 
-main();
-
 sub main{
-	if(){bbllla}
+
+numberRand(1, 1000) <= 500;
+numberRand(1, 9999) <= 5000;
+
+
 }
 
-sub a2{
-	if(){
-		while($a){
-			$a++;
-		}
-	}
+sub x9999{
+	
 }
 
-sub a6
-{
-print;
-}
-
-
-
-main();
+x9999();
 
 	';
 	### CUT ###
 	
 	
-	#$source = fileRead($0);
+	$source = fileRead($0);
 	strTrim(\$source);
 	
 	# Read row by row.
@@ -135,7 +130,7 @@ main();
 		}
 		
 	}
-	print "generation: $generation\n";
+	print "genera\x74\x69on: $generation\n";
 	
 	
 	
@@ -146,7 +141,7 @@ main();
 		my $subname = $1;
 		strTrim(\$subname);
 		
-		if(!defined $subs{$subname}){
+		if($subname ne '' && !defined $subs{$subname}){
 			#print "sub '$subname'\n";
 			
 			my $newname = '';
@@ -156,6 +151,7 @@ main();
 				'name' => $subname,
 				'newname' => $newname,
 				'content' => '',
+				'mixpair' => '',
 			};
 			
 		}
@@ -169,7 +165,7 @@ main();
 		my $varname = $2;
 		
 		if( length $varname <= 2){
-			print "skip var: '$vartype' '$varname' \n";
+			#print "skip var: '$vartype' '$varname' \n";
 			next;
 		}
 		
@@ -189,78 +185,123 @@ main();
 		
 	}
 	
-	# TODO: Mix subs
+	# Mix subs
 	my $out3 = '';
 	my $level = 0;
-	my $thissub = '';
+	my $thisSubName = '';
 	
 	while(length $out > 0){
 		my $char = substr $out, 0, 1;
 		
-		
-		
-		
-		
-		if($char eq '{'){
+		# {
+		if($char eq "\x7b"){
 			$level++;
 			if($level == 0){
 				$out = substr $out, 1;
 				next;
 			}
 		}
-		elsif($char eq '}'){
+		# }
+		elsif($char eq "\x7d"){
 			$level--;
 			
-			
 			if($level == 0){
-				$thissub = '';
+				if($thisSubName ne ''){
+					$subs{$thisSubName}{'content'} .= $char;
+				}
+				$thisSubName = '';
+				
 				$out = substr $out, 1;
 				next;
 			}
-			
-			
 		}
 		
-		if($out =~ /^(sub [^\{]+\{)/){
-			my $substr = $1;
-			$level++;
-			$out = substr $out, length($1);
+		if($level == 0){
+			if($out =~ /^(sub [a-z0-9_]+[^\x7b]*\x7b)/i){
+				$level++;
+				
+				my $substr = $1;
+				
+				$out = substr $out, length($1);
+				
+				if($substr =~ /^sub ([a-z0-9_]+)[^\x7b]*\x7b/i){
+					$thisSubName = $1;
+					$out3 .= "\x23\x23\x23SUB_".$thisSubName."\x23\x23\x23";
+					
+				}
+				
+				$subs{$thisSubName}{'content'} .= $substr;
+				
+				next;
+			}
+		}
+		
+		if($thisSubName ne ''){
+			$subs{$thisSubName}{'content'} .= $char;
 			
-			if($substr =~ /^sub ([^\{]+)/){
-				$thissub = $1;
-				$out3 .= '###SUB_'.$thissub.'###';
+			# ; { }
+			if($char =~ /[\x3b\x7b\x7d]/ && numberRand(1, 1000) <= 500){
+				$subs{$thisSubName}{'content'} .= "\n";
 			}
 			
-			next;
-		}
-		
-		if($thissub ne ''){
-			$subs{$thissub}{'content'} .= $char;
 		}
 		else{
 			$out3 .= $char;
 		}
 		
-		print "char $level '$char' '$thissub' '$out3' \n";
-		
+		#print "out '".."'\n";
 		$out = substr $out, 1;
 		
 	}
 	
 	
-	print "\n";
-	for my $subname (keys %subs){
+	
+	my %newsubs = %subs;
+	my $maxkeys = keys %newsubs;
+	for my $subname ( sort{$a cmp $b} keys %subs){
 		my $cont = $subs{$subname}{'content'};
-		print "sub '$subname' '$cont' \n";
+		
+		my $mixpairc = 0;
+		while($subs{$subname}{'mixpair'} eq ''){
+			my $r = numberRand(1, $maxkeys);
+			
+			
+			my $subc = 0;
+			for my $subname2 (keys %subs){
+				$subc++;
+				#print "\t\tsubname2 '$subname2' $subc\n";
+				if($subc == $r){
+					#print "\t\t\tsubname2 ok '$subname2' $subc\n";
+					if($subs{$subname2}{'mixpair'} eq ''){
+						$subs{$subname}{'mixpair'} = $subname2;
+						$subs{$subname2}{'mixpair'} = $subname;
+					}
+					last;
+				}
+			}
+			
+			$mixpairc++;
+			#print "\tmixpair $mixpairc '".$subs{$subname}{'mixpair'}."' \n";
+			
+			#sleep 1;
+		}
+		
+		#print "sub '$subname' => '".$subs{$subname}{'mixpair'}."' \n";
+		
+		my $pair = $subs{$subname}{'mixpair'};
+		$out3 =~ s/\x23\x23\x23SUB_$pair\x23\x23\x23/$cont/s;
+		
 	}
 	
 	
-	print "\n\n$out3\n\n\n";
-	exit();
+	#print "\nout\n$out3\n\n\n";exit(1);
+	
+	
+	
 	
 	# Substitute subs.
 	my @subskeys = keys %subs;
-	print "\n\nsubs ".@subskeys."\n";
+	print "\nsubs ".@subskeys."\n";
 	for my $subname (reverse sort{
 		length($a) <=> length($b)
 	} @subskeys){
@@ -274,7 +315,7 @@ main();
 	
 	# Substitute variables.
 	my @varskeys = keys %vars;
-	print "\n\nvars ".@varskeys."\n";
+	print "\nvars ".@varskeys."\n";
 	for my $varname (reverse sort{
 		length($a) <=> length($b)
 	} @varskeys){
@@ -287,9 +328,9 @@ main();
 		
 	}
 	
-	
-	numberRand(1, 9999) >= 5000 ? $out3 =~ s/\\x0a/\\n/sg : $out3 =~ s/\\n/\\x0a/sg;
-	numberRand(1, 9999) >= 5000 ? $out3 =~ s/\\x09/\\t/sg : $out3 =~ s/\\t/\\x09/sg;
+	# Mix \n and \n
+	numberRand(1, 1000) <= 500 ? $out3 =~ s/\\x0a/\\n/sg : $out3 =~ s/\\n/\\x0a/sg;
+	numberRand(1, 1000) <= 500 ? $out3 =~ s/\\x09/\\t/sg : $out3 =~ s/\\t/\\x09/sg;
 	
 		
 	#$out3 =~ s/;/;\n/sg;$out3 =~ s/\}/\}\n/sg;$out3 =~ s/\{/\{\n/sg;
@@ -299,7 +340,7 @@ main();
 	#print "\n\nout\n$out3\n";
 	
 	my $outPath = $0.'.pl';
-	fileWrite($outPath, "\x23!/usr/bin/perl -w\n\x23 Created by TheFox\x40fox21.at\n\x23 Generation: $generation\n\x23 ".time()."\n\n".$out3);
+	fileWrite($outPath, "\x23!/usr/bin/perl -w\n\x23 Created by TheFox\x40fox21.at\n\x23 Gener\x61tion: $generation\n\x23 ".time()."\n\n".$out3);
 	chmod 0755, $outPath;
 	
 	$outPath;
