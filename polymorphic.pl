@@ -17,6 +17,7 @@ $| = 1;
 # ; = 3b
 # \n = 0a
 # a = 61
+# \ = 5c
 
 
 # Variable blacklist
@@ -83,23 +84,16 @@ $| = 1;
 
 sub main{
 
-numberRand(1, 1000) <= 500;
-numberRand(1, 9999) <= 5000;
-
+print "d\x61s ist ein test $ xyz\n";
 
 }
 
-sub x9999{
-	
-}
-
-x9999();
 
 	';
 	### CUT ###
 	
 	
-	$source = fileRead($0);
+	#$source = fileRead($0);
 	strTrim(\$source);
 	
 	# Read row by row.
@@ -238,12 +232,6 @@ x9999();
 		
 		if($thisSubName ne ''){
 			$subs{$thisSubName}{'content'} .= $char;
-			
-			# ; { }
-			if($char =~ /[\x3b\x7b\x7d]/ && numberRand(1, 1000) <= 500){
-				$subs{$thisSubName}{'content'} .= "\n";
-			}
-			
 		}
 		else{
 			$out3 .= $char;
@@ -293,12 +281,6 @@ x9999();
 		
 	}
 	
-	
-	#print "\nout\n$out3\n\n\n";exit(1);
-	
-	
-	
-	
 	# Substitute subs.
 	my @subskeys = keys %subs;
 	print "\nsubs ".@subskeys."\n";
@@ -328,16 +310,67 @@ x9999();
 		
 	}
 	
+	# Mix strings
+	my $out4 = $out3;
+	$out3 = '';
+	
+	my $isStr = 0;
+	my $thisStr = '';
+	while(length $out4 > 0){
+		my $char = substr $out4, 0, 1;
+		my $skip = 1;
+		
+		if($char eq '"'){
+			$isStr = !$isStr;
+			if($isStr){
+				$thisStr = '';
+			}
+		}
+		
+		# TODO: als hex \x61 oder als chr(65) ersetzen
+		if($isStr){
+			$thisStr .= $char;
+			if($char eq '$' || $char eq '@' || $char eq '%'){
+				print STDERR "ERROR: variable '$char' found in string: '$thisStr' ".chr(92)."\n";
+				exit(1);
+			}
+			if(numberRand(1, 9999) <= 5000){
+				# \
+				if($char eq chr(92)){
+					if($out3 =~ /^.x([0-9a-f]{2})/i){
+						print "hex found '$1'\n";
+						$skip += 3;
+					}
+				}
+				else{
+					print "char $isStr '$char' \n";
+				}
+			}
+		}
+		
+		$out3 .= $char;
+		
+		# ; { }
+		if($char =~ /[\x3b\x7b\x7d]/ && numberRand(1, 9999) <= 5000){
+			$out3 .= "\n";
+		}
+		
+		print "char $isStr '$char' \n";
+		
+		$out4 = substr $out4, $skip;
+		
+	}
+	
 	# Mix \n and \n
-	numberRand(1, 1000) <= 500 ? $out3 =~ s/\\x0a/\\n/sg : $out3 =~ s/\\n/\\x0a/sg;
-	numberRand(1, 1000) <= 500 ? $out3 =~ s/\\x09/\\t/sg : $out3 =~ s/\\t/\\x09/sg;
+	#numberRand(1, 1000) <= 500 ? $out3 =~ s/\\x0a/\\n/sg : $out3 =~ s/\\n/\\x0a/sg;
+	#numberRand(1, 1000) <= 500 ? $out3 =~ s/\\x09/\\t/sg : $out3 =~ s/\\t/\\x09/sg;
 	
 		
 	#$out3 =~ s/;/;\n/sg;$out3 =~ s/\}/\}\n/sg;$out3 =~ s/\{/\{\n/sg;
 	#$out3 =~ s/(sub [0-9a-z]+)/\n\n\n$1/sig;
 	
 	
-	#print "\n\nout\n$out3\n";
+	print "\n\nout\n$out3\n";
 	
 	my $outPath = $0.'.pl';
 	fileWrite($outPath, "\x23!/usr/bin/perl -w\n\x23 Created by TheFox\x40fox21.at\n\x23 Gener\x61tion: $generation\n\x23 ".time()."\n\n".$out3);
