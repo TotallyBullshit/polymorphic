@@ -84,7 +84,7 @@ $| = 1;
 
 sub main{
 
-print "d\x61s ist ein test $ xyz\n";
+print "d\\x61s ist \$ ein test xyz\n";
 
 }
 
@@ -310,6 +310,8 @@ print "d\x61s ist ein test $ xyz\n";
 		
 	}
 	
+	print "\n\nout\n$out3\n";
+	
 	# Mix strings
 	my $out4 = $out3;
 	$out3 = '';
@@ -328,24 +330,37 @@ print "d\x61s ist ein test $ xyz\n";
 		}
 		
 		# TODO: als hex \x61 oder als chr(65) ersetzen
-		if($isStr){
+		if($isStr && $char ne '"'){
 			$thisStr .= $char;
 			if($char eq '$' || $char eq '@' || $char eq '%'){
 				print STDERR "ERROR: variable '$char' found in string: '$thisStr' ".chr(92)."\n";
 				exit(1);
 			}
-			if(numberRand(1, 9999) <= 5000){
-				# \
-				if($char eq chr(92)){
-					if($out3 =~ /^.x([0-9a-f]{2})/i){
-						print "hex found '$1'\n";
+			
+			# \
+			if($char eq chr(92)){
+				
+				
+				# \xNN
+				if($out4 =~ /^.x([0-9a-f]{2})/i){
+					
+					if(numberRand(1, 9999) <= 5000){
+						print "hex found 'x$1'\n";
+						$char = chr hex $1;
 						$skip += 3;
 					}
+					
 				}
 				else{
-					print "char $isStr '$char' \n";
+					$char .= substr $out4, 1, 1;
+					$skip += 1;
 				}
+				
 			}
+			else{
+				print "str $isStr '$char' \n";
+			}
+			
 		}
 		
 		$out3 .= $char;
@@ -355,7 +370,7 @@ print "d\x61s ist ein test $ xyz\n";
 			$out3 .= "\n";
 		}
 		
-		print "char $isStr '$char' \n";
+		#print "char $isStr '$char' $skip \n";
 		
 		$out4 = substr $out4, $skip;
 		
