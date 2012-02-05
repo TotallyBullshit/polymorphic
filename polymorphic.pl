@@ -83,21 +83,17 @@ sub main{
 	if(){bbllla}
 }
 
-sub a2{}
-sub a3{
+sub a2{
+	if(){
+		while($a){
+			$a++;
+		}
+	}
 }
-sub a4 {
-}
-sub a5 			 {
-}
+
 sub a6
 {
-}
-sub a7
- {
-}
-sub a8
-		{
+print;
 }
 
 
@@ -201,50 +197,65 @@ main();
 	while(length $out > 0){
 		my $char = substr $out, 0, 1;
 		
-		$out = substr $out, 1;
+		
+		
+		
 		
 		if($char eq '{'){
 			$level++;
-		}
-		
-		
-		
-		if($char eq '}'){
-			$level--;
-		}
-		
-		if($level == 0 && $out =~ /^(sub ([a-z0-9][^\{]*))\{/si){
-			
-			$out = substr $out, length($1);
-			
-			
-			#print "neu '".substr($out, 0, 10)."' \n\n";
-			
-			$thissub = $2;
-			strTrim(\$thissub);
-			print "sub ".length($1)." '$1' '$thissub'  \n";
-			
-		}
-		else{
-			if($thissub ne ''){
-				$subs{$thissub}{'content'} .= $char;
+			if($level == 0){
+				$out = substr $out, 1;
+				next;
 			}
 		}
+		elsif($char eq '}'){
+			$level--;
+			
+			
+			if($level == 0){
+				$thissub = '';
+				$out = substr $out, 1;
+				next;
+			}
+			
+			
+		}
 		
+		if($out =~ /^(sub [^\{]+\{)/){
+			my $substr = $1;
+			$level++;
+			$out = substr $out, length($1);
+			
+			if($substr =~ /^sub ([^\{]+)/){
+				$thissub = $1;
+				$out3 .= '###SUB_'.$thissub.'###';
+			}
+			
+			next;
+		}
 		
-		#print "char: ".(length $out)." $level ".("\t" x $level)." '$char' \n";
+		if($thissub ne ''){
+			$subs{$thissub}{'content'} .= $char;
+		}
+		else{
+			$out3 .= $char;
+		}
 		
-		#sleep 1;
+		print "char $level '$char' '$thissub' '$out3' \n";
+		
+		$out = substr $out, 1;
+		
 	}
 	
 	
-	
+	print "\n";
 	for my $subname (keys %subs){
-		print "sub '$subname' '$subs{$subname}{'content'}' \n";
+		my $cont = $subs{$subname}{'content'};
+		print "sub '$subname' '$cont' \n";
 	}
 	
 	
-	print "\n\n$out3";
+	print "\n\n$out3\n\n\n";
 	exit();
 	
 	# Substitute subs.
