@@ -328,6 +328,22 @@ x9999();
 		
 	}
 	
+	# Mix numberz
+	my @numbers = ();
+	while($out3 =~ /[^\d]([0-9]{3,4})[^\d]/g){
+		my $num = $1;
+		if(!grep{$_ == $num} @numbers){
+			my $numLen = length $num;
+			my $min = '1'.('0' x ($numLen - 1));
+			my $max = '9' x $numLen;
+			my $newnum = numberRand($min, $max);
+			
+			push @numbers, $newnum;
+			$out3 =~ s/$num/$newnum/sg;
+			
+		}
+	}
+	
 	# Mix \n and \n
 	numberRand(1, 1000) <= 500 ? $out3 =~ s/\\x0a/\\n/sg : $out3 =~ s/\\n/\\x0a/sg;
 	numberRand(1, 1000) <= 500 ? $out3 =~ s/\\x09/\\t/sg : $out3 =~ s/\\t/\\x09/sg;
