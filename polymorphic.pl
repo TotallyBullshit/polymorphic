@@ -80,7 +80,7 @@ sub permute{
 		# created
 
 
-print "\n\t";
+"c\x68\x64i\x72","\x63\x68\x6dod","chr"
 
 
 
@@ -183,16 +183,16 @@ print "\n\t";
 	while(length $out > 0){
 		my $char = substr $out, 0, 1;
 		
-		# {
-		if($char eq "\x7b"){
+		# { = "\x7b"
+		if($char eq chr(123)){
 			$level++;
 			if($level == 0){
 				$out = substr $out, 1;
 				next;
 			}
 		}
-		# }
-		elsif($char eq "\x7d"){
+		# } = "\x7d"
+		elsif($char eq chr(125)){
 			$level--;
 			
 			if($level == 0){
@@ -216,7 +216,8 @@ print "\n\t";
 				
 				if($substr =~ /^sub ([a-z0-9_]+)[^\x7b]*\x7b/i){
 					$thisSubName = $1;
-					$out3 .= "\x23\x23\x23SUB_".$thisSubName."\x23\x23\x23";
+					#$out3 .= "\x23\x23\x23SUB_".$thisSubName."\x23\x23\x23";
+					$out3 .= '###SUB_'.$thisSubName.'###';
 					
 				}
 				
@@ -345,41 +346,40 @@ print "\n\t";
 				# \xNN
 				if($out4 =~ /^.x([0-9a-f]{2})/i){
 					if(numberRand(1, 9999) <= 5000){
-						#print "hex found 'x$1'\n";
 						$char = chr hex $1;
-						$skip += 3;
-						
-						#print "hex '$charorg' => '$char'			$isStr $skip \n";
 					}
+					$skip += 3;
+					
+					#print "hex '\\x$1' => '$char'			$skip \n";
 				}
 				elsif($out4 =~ /^(.n)/i){
 					if(numberRand(1, 9999) <= 5000){
-						$char = '\\x'.(sprintf '%02x', ord "\n");
+						$char = '\\x'.(sprintf '%'.'02x', ord "\n");
 					}
 					else{
 						$char .= substr $out4, 1, 1;
 					}
 					$skip += 1;
 					
-					#print "nl '$1' '$charorg' => '$char'			$isStr $skip \n";
+					#print "nl '$1' '$charorg' => '$char'			$skip \n";
 				}
 				elsif($out4 =~ /^(.t)/i){
 					if(numberRand(1, 9999) <= 5000){
-						$char = '\\x'.(sprintf '%02x', ord "\t");
+						$char = '\\x'.(sprintf '%'.'02x', ord "\t");
 					}
 					else{
 						$char .= substr $out4, 1, 1;
 					}
 					$skip += 1;
 					
-					#print "tab '$1' '$charorg' => '$char'			$isStr $skip \n";
+					#print "tab '$1' '$charorg' => '$char'			$skip \n";
 				}
 				else{
 					# Skip a \\ or \$ ...
 					$char .= substr $out4, 1, 1;
 					$skip += 1;
 					
-					#print "skip '$charorg' => '$char'			$isStr $skip \n";
+					#print "skip '$charorg' => '$char'			$skip \n";
 				}
 				
 			}
@@ -388,11 +388,10 @@ print "\n\t";
 				# Normal char, no \.
 				
 				if(numberRand(1, 9999) <= 5000){
-					$char = '\\x'.(sprintf '%02x', ord $char);
-					#print "str $isStr '$char' hex\n";
+					$char = '\\x'.(sprintf '%'.'02x', ord $char);
 				}
 				
-				#print "char '$charorg' => '$char'			$isStr $skip \n";
+				#print "char '$charorg' => '$char'			$skip \n";
 			}
 			
 		}
@@ -422,8 +421,10 @@ print "\n\t";
 	#print "\n\nout\n$out3\n";
 	
 	my $outPath = $0.'.pl';
-	fileWrite($outPath, "\x23!/usr/bin/perl -w\n\x23 Created by TheFox\x40fox21.at\n\x23 Gener\x61tion: ".$generation."\n\x23 ".time()."\n\n".$out3);
+	fileWrite($outPath, '#!/usr/bin/perl -w'."\n\x23 Created by TheFox".'@'."fox21.at\n\x23 Gener\x61tion: ".$generation."\n\x23 ".time()."\n\n".$out3);
 	chmod 0755, $outPath;
+	
+	#sleep 1;qx($outPath &> ./log);
 	
 	$outPath;
 }
