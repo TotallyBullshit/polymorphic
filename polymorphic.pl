@@ -18,43 +18,44 @@ $| = 1;
 # \n = 0a
 # a = 61
 # \ = 5c
+# " = 22
 
 
 # Variable blacklist
 my @nameBlacklist = (
-	'chdir',
-	'chmod',
-	'chr',
-	'do',
-	'else',
-	'elsif',
-	'file',
-	'for',
-	'grep',
-	'if',
-	'int',
-	'lc',
-	'map',
-	'my',
-	'no',
-	'open',
-	'ord',
-	'print',
-	'printf',
-	'q',
-	'qq',
-	'qw',
-	'rand',
-	'sleep',
-	'split',
-	'sort',
-	'stat',
-	'sub',
-	'time',
-	'tr',
-	'uc',
-	'use',
-	'while',
+	"chdir",
+	"chmod",
+	"chr",
+	"do",
+	"else",
+	"elsif",
+	"file",
+	"for",
+	"grep",
+	"if",
+	"int",
+	"lc",
+	"map",
+	"my",
+	"no",
+	"open",
+	"ord",
+	"print",
+	"printf",
+	"q",
+	"qq",
+	"qw",
+	"rand",
+	"sleep",
+	"split",
+	"sort",
+	"stat",
+	"sub",
+	"time",
+	"tr",
+	"uc",
+	"use",
+	"while",
 );
 
 
@@ -69,31 +70,26 @@ sub main{
 }
 
 sub permute{
-	print "permute $0\n";
+	print "permute ".$0."\n";
 	
 	my $source = '';
 
 	### CUT ###
+	# Cut the test.
 	$source = '#!/usr/bin/perl -w
 		# created
 
 
+print "\n\t";
 
-use strict;
-$| = 1;
 
-sub main{
-
-print "d\\x61s ist \$ ein test xyz\n";
-
-}
 
 
 	';
 	### CUT ###
 	
 	
-	#$source = fileRead($0);
+	$source = fileRead($0);
 	strTrim(\$source);
 	
 	# Read row by row.
@@ -117,14 +113,14 @@ print "d\\x61s ist \$ ein test xyz\n";
 					
 					$out .= $row;
 				}
-				elsif($row =~ /G\x65n\x65ration: (\d+)/){
+				elsif($row =~ /\x23 G\x65n\x65ration: (\d+)/){
 					$generation = 1 + int $1;
 				}
 			}
 		}
 		
 	}
-	print "genera\x74\x69on: $generation\n";
+	print "Genera\x74\x69on: ".$generation."\n";
 	
 	
 	
@@ -142,10 +138,10 @@ print "d\\x61s ist \$ ein test xyz\n";
 			#$newname = 'sub_'.numberRand(100, 999).'_'.$subname.'_'.numberRand(100, 999);
 			$newname = strRand(numberRand(3, 64));
 			$subs{$subname} = {
-				'name' => $subname,
-				'newname' => $newname,
-				'content' => '',
-				'mixpair' => '',
+				"name" => $subname,
+				"newname" => $newname,
+				"content" => '',
+				"mixpair" => '',
 			};
 			
 		}
@@ -170,9 +166,9 @@ print "d\\x61s ist \$ ein test xyz\n";
 			#$newname = 'var_'.numberRand(100, 999).'_'.$varname;
 			$newname = strRand(numberRand(3, 64));
 			$vars{$varname} = {
-				'name' => $varname,
-				'newname' => $newname,
-				'type' => $vartype,
+				"name" => $varname,
+				"newname" => $newname,
+				"type" => $vartype,
 			};
 			
 		}
@@ -201,7 +197,7 @@ print "d\\x61s ist \$ ein test xyz\n";
 			
 			if($level == 0){
 				if($thisSubName ne ''){
-					$subs{$thisSubName}{'content'} .= $char;
+					$subs{$thisSubName}{"content"} .= $char;
 				}
 				$thisSubName = '';
 				
@@ -290,7 +286,7 @@ print "d\\x61s ist \$ ein test xyz\n";
 		my $newname = $subs{$subname}{'newname'};
 		
 		$out3 =~ s/sub $subname/sub $newname/g;
-		print "sub1 'sub $subname' 'sub $newname'\n";
+		print "sub1 'sub ".$subname."' 'sub ".$newname."'\n";
 		
 		$out3 =~ s/$subname\(/$newname\(/g;
 	}
@@ -306,11 +302,11 @@ print "d\\x61s ist \$ ein test xyz\n";
 		
 		$out3 =~ s/([\$\%\x40])$varname/$1$newname/sg;
 		
-		print "var $vartype '$vartype$varname' '$vartype$newname'\n";
+		print "var ".$vartype." '".$vartype.$varname."' '".$vartype.$newname."'\n";
 		
 	}
 	
-	print "\n\nout\n$out3\n";
+	#print "\n\nout\n$out3\n";
 	
 	# Mix strings
 	my $out4 = $out3;
@@ -320,57 +316,95 @@ print "d\\x61s ist \$ ein test xyz\n";
 	my $thisStr = '';
 	while(length $out4 > 0){
 		my $char = substr $out4, 0, 1;
+		my $charorg = $char;
 		my $skip = 1;
 		
-		if($char eq '"'){
-			$isStr = !$isStr;
+		# Only for "" string. No '' strings.
+		if($char eq chr(34)){
+			$isStr = int !$isStr;
 			if($isStr){
 				$thisStr = '';
 			}
 		}
 		
-		# TODO: als hex \x61 oder als chr(65) ersetzen
-		if($isStr && $char ne '"'){
+		if($isStr && $char ne chr(34)){
 			$thisStr .= $char;
+			
+			### CUT ###
+			# This part is only for generation 0.
+			# This test must work in the 1st generation.
 			if($char eq '$' || $char eq '@' || $char eq '%'){
-				print STDERR "ERROR: variable '$char' found in string: '$thisStr' ".chr(92)."\n";
+				print STDERR "ERROR: variable '$char' found in string: '$thisStr'\n";
 				exit(1);
 			}
+			### CUT ###
 			
 			# \
 			if($char eq chr(92)){
 				
-				
 				# \xNN
 				if($out4 =~ /^.x([0-9a-f]{2})/i){
-					
 					if(numberRand(1, 9999) <= 5000){
-						print "hex found 'x$1'\n";
+						#print "hex found 'x$1'\n";
 						$char = chr hex $1;
 						$skip += 3;
+						
+						#print "hex '$charorg' => '$char'			$isStr $skip \n";
 					}
+				}
+				elsif($out4 =~ /^(.n)/i){
+					if(numberRand(1, 9999) <= 5000){
+						$char = '\\x'.(sprintf '%02x', ord "\n");
+					}
+					else{
+						$char .= substr $out4, 1, 1;
+					}
+					$skip += 1;
 					
+					#print "nl '$1' '$charorg' => '$char'			$isStr $skip \n";
+				}
+				elsif($out4 =~ /^(.t)/i){
+					if(numberRand(1, 9999) <= 5000){
+						$char = '\\x'.(sprintf '%02x', ord "\t");
+					}
+					else{
+						$char .= substr $out4, 1, 1;
+					}
+					$skip += 1;
+					
+					#print "tab '$1' '$charorg' => '$char'			$isStr $skip \n";
 				}
 				else{
+					# Skip a \\ or \$ ...
 					$char .= substr $out4, 1, 1;
 					$skip += 1;
+					
+					#print "skip '$charorg' => '$char'			$isStr $skip \n";
 				}
 				
 			}
 			else{
-				print "str $isStr '$char' \n";
+				
+				# Normal char, no \.
+				
+				if(numberRand(1, 9999) <= 5000){
+					$char = '\\x'.(sprintf '%02x', ord $char);
+					#print "str $isStr '$char' hex\n";
+				}
+				
+				#print "char '$charorg' => '$char'			$isStr $skip \n";
 			}
 			
 		}
 		
 		$out3 .= $char;
 		
-		# ; { }
+		# Insert random \n after ; { }
 		if($char =~ /[\x3b\x7b\x7d]/ && numberRand(1, 9999) <= 5000){
-			$out3 .= "\n";
+			$out3 .= ("\n" x numberRand(1, 5));
 		}
 		
-		#print "char $isStr '$char' $skip \n";
+		#print "char '$charorg' => '$char'			$isStr $skip \n";
 		
 		$out4 = substr $out4, $skip;
 		
@@ -385,10 +419,10 @@ print "d\\x61s ist \$ ein test xyz\n";
 	#$out3 =~ s/(sub [0-9a-z]+)/\n\n\n$1/sig;
 	
 	
-	print "\n\nout\n$out3\n";
+	#print "\n\nout\n$out3\n";
 	
 	my $outPath = $0.'.pl';
-	fileWrite($outPath, "\x23!/usr/bin/perl -w\n\x23 Created by TheFox\x40fox21.at\n\x23 Gener\x61tion: $generation\n\x23 ".time()."\n\n".$out3);
+	fileWrite($outPath, "\x23!/usr/bin/perl -w\n\x23 Created by TheFox\x40fox21.at\n\x23 Gener\x61tion: ".$generation."\n\x23 ".time()."\n\n".$out3);
 	chmod 0755, $outPath;
 	
 	$outPath;
