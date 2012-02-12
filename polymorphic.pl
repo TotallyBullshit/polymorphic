@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 # Created @ 21.01.2012 by TheFox@fox21.at
 # Polymorphic Perl Script
-# Version: 1.1.0
+# Version: 1.2.0
 # Generation: 0
 
 use strict;
