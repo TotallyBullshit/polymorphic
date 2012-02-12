@@ -345,12 +345,24 @@ sub permute{
 				
 				# \xNN
 				if($out4 =~ /^.x([0-9a-f]{2})/i){
+					my $hex = $1;
 					if(numberRand(1, 9999) <= 5000){
-						$char = chr hex $1;
+						if($hex eq '0a'){
+							$char = '\n';
+						}
+						elsif($hex eq '09'){
+							$char = '\t';
+						}
+						else{
+							$char = chr hex $hex;
+						}
+					}
+					else{
+						$char .= substr $out4, 1, 3;
 					}
 					$skip += 3;
 					
-					#print "hex '\\x$1' => '$char'			$skip \n";
+					if($hex eq '0a'){ print "hex ".$skip." '\\x".$hex."' => '".$char."' \n"; }
 				}
 				elsif($out4 =~ /^(.n)/i){
 					if(numberRand(1, 9999) <= 5000){
