@@ -155,7 +155,6 @@ sub permute{
 		my $varname = $2;
 		
 		if( length $varname <= 2){
-			#print "skip var: '$vartype' '$varname' \n";
 			next;
 		}
 		
@@ -214,7 +213,6 @@ sub permute{
 				
 				if($substr =~ /^sub ([a-z0-9_]+)[^\x7b]*\x7b/i){
 					$thisSubName = $1;
-					#$out3 .= "\x23\x23\x23SUB_".$thisSubName."\x23\x23\x23";
 					$out3 .= '###SUB_'.$thisSubName.'###';
 				}
 				
@@ -333,10 +331,10 @@ sub permute{
 				if($out4 =~ /^.x([0-9a-f]{2})/i){
 					my $hex = $1;
 					if(numberRand(1, 9999) <= 5000){
-						if($hex eq '0a'){
+						if($hex eq "0a"){
 							$char = '\n';
 						}
-						elsif($hex eq '09'){
+						elsif($hex eq "09"){
 							$char = '\t';
 						}
 						else{
@@ -352,7 +350,7 @@ sub permute{
 				}
 				elsif($out4 =~ /^(.n)/i){
 					if(numberRand(1, 9999) <= 5000){
-						$char = '\\x'.(sprintf '%'."02x", ord "\n");
+						$char = '\\'."x".(sprintf '%'."02x", ord "\n");
 					}
 					else{
 						$char .= substr $out4, 1, 1;
@@ -363,7 +361,7 @@ sub permute{
 				}
 				elsif($out4 =~ /^(.t)/i){
 					if(numberRand(1, 9999) <= 5000){
-						$char = '\\x'.(sprintf '%'."02x", ord "\t");
+						$char = '\\'."x".(sprintf '%'."02x", ord "\t");
 					}
 					else{
 						$char .= substr $out4, 1, 1;
@@ -386,7 +384,7 @@ sub permute{
 				# Normal char, no \.
 				
 				if(numberRand(1, 9999) <= 5000){
-					$char = '\\x'.(sprintf '%'."02x", ord $char);
+					$char = '\\'."x".(sprintf '%'."02x", ord $char);
 				}
 				
 				#print "char $skip '$charorg' => '$char' \n";
@@ -405,16 +403,6 @@ sub permute{
 		
 	}
 	
-	# Mix \n and \n
-	#numberRand(1, 1000) <= 500 ? $out3 =~ s/\\x0a/\\n/sg : $out3 =~ s/\\n/\\x0a/sg;
-	#numberRand(1, 1000) <= 500 ? $out3 =~ s/\\x09/\\t/sg : $out3 =~ s/\\t/\\x09/sg;
-	
-		
-	#$out3 =~ s/;/;\n/sg;$out3 =~ s/\}/\}\n/sg;$out3 =~ s/\{/\{\n/sg;
-	#$out3 =~ s/(sub [0-9a-z]+)/\n\n\n$1/sig;
-	
-	
-	#print "\n\nout\n$out3\n";
 	
 	my $outPath = $0.'.pl';
 	fileWrite($outPath, '#!/usr/bin/perl -w'."\n\x23 Created by TheFox".'@'."fox21.at\n\x23 Gener\x61tion: ".$generation."\n\x23 ".time()."\n\n".$out3);
@@ -430,7 +418,7 @@ sub fileRead{
 	my($path) = @_;
 	my $content = '';
 	
-	open F, '<', $path;
+	open F, "<", $path;
 	$content = join '', <F>;
 	close F;
 	
@@ -440,7 +428,7 @@ sub fileRead{
 # Write a file
 sub fileWrite{
 	my($path, $content) = @_;
-	open F, '>', $path;
+	open F, ">", $path;
 	print F $content;
 	close F;
 }
