@@ -80,7 +80,7 @@ sub permute{
 		# created
 
 
-"c\x68\x64i\x72","\x63\x68\x6dod","chr"
+"\x68"
 
 
 
@@ -218,7 +218,6 @@ sub permute{
 					$thisSubName = $1;
 					#$out3 .= "\x23\x23\x23SUB_".$thisSubName."\x23\x23\x23";
 					$out3 .= '###SUB_'.$thisSubName.'###';
-					
 				}
 				
 				$subs{$thisSubName}{'content'} .= $substr;
@@ -234,11 +233,9 @@ sub permute{
 			$out3 .= $char;
 		}
 		
-		#print "out '".."'\n";
 		$out = substr $out, 1;
 		
 	}
-	
 	
 	
 	my %newsubs = %subs;
@@ -249,7 +246,6 @@ sub permute{
 		my $mixpairc = 0;
 		while($subs{$subname}{'mixpair'} eq ''){
 			my $r = numberRand(1, $maxkeys);
-			
 			
 			my $subc = 0;
 			for my $subname2 (keys %subs){
@@ -266,12 +262,7 @@ sub permute{
 			}
 			
 			$mixpairc++;
-			#print "\tmixpair $mixpairc '".$subs{$subname}{'mixpair'}."' \n";
-			
-			#sleep 1;
 		}
-		
-		#print "sub '$subname' => '".$subs{$subname}{'mixpair'}."' \n";
 		
 		my $pair = $subs{$subname}{'mixpair'};
 		$out3 =~ s/\x23\x23\x23SUB_$pair\x23\x23\x23/$cont/s;
@@ -287,9 +278,9 @@ sub permute{
 		my $newname = $subs{$subname}{'newname'};
 		
 		$out3 =~ s/sub $subname/sub $newname/g;
-		print "sub1 'sub ".$subname."' 'sub ".$newname."'\n";
-		
 		$out3 =~ s/$subname\(/$newname\(/g;
+		
+		print "sub 'sub ".$subname."' 'sub ".$newname."'\n";
 	}
 	
 	# Substitute variables.
@@ -307,9 +298,8 @@ sub permute{
 		
 	}
 	
-	#print "\n\nout\n$out3\n";
-	
 	# Mix strings
+	#print "\nmix strings\n";
 	my $out4 = $out3;
 	$out3 = '';
 	
@@ -332,7 +322,7 @@ sub permute{
 			$thisStr .= $char;
 			
 			### CUT ###
-			# This part is only for generation 0.
+			# This part is only for generation 0 selfcheck.
 			# This test must work in the 1st generation.
 			if($char eq '$' || $char eq '@' || $char eq '%'){
 				print STDERR "ERROR: variable '$char' found in string: '$thisStr'\n";
@@ -362,7 +352,7 @@ sub permute{
 					}
 					$skip += 3;
 					
-					if($hex eq '0a'){ print "hex ".$skip." '\\x".$hex."' => '".$char."' \n"; }
+					#if($hex eq '0a'){ print "hex ".$skip." '\\x".$hex."' => '".$char."' \n"; }
 				}
 				elsif($out4 =~ /^(.n)/i){
 					if(numberRand(1, 9999) <= 5000){
@@ -373,7 +363,7 @@ sub permute{
 					}
 					$skip += 1;
 					
-					#print "nl '$1' '$charorg' => '$char'			$skip \n";
+					#print "nl ".$skip." '".$1."' => '".$char."' \n";
 				}
 				elsif($out4 =~ /^(.t)/i){
 					if(numberRand(1, 9999) <= 5000){
@@ -384,14 +374,14 @@ sub permute{
 					}
 					$skip += 1;
 					
-					#print "tab '$1' '$charorg' => '$char'			$skip \n";
+					#print "tab $skip '$1' '$charorg' => '$char' \n";
 				}
 				else{
 					# Skip a \\ or \$ ...
 					$char .= substr $out4, 1, 1;
 					$skip += 1;
 					
-					#print "skip '$charorg' => '$char'			$skip \n";
+					#print "skip $skip '$charorg' => '$char' \n";
 				}
 				
 			}
@@ -403,7 +393,7 @@ sub permute{
 					$char = '\\x'.(sprintf '%'.'02x', ord $char);
 				}
 				
-				#print "char '$charorg' => '$char'			$skip \n";
+				#print "char $skip '$charorg' => '$char' \n";
 			}
 			
 		}
@@ -414,8 +404,6 @@ sub permute{
 		if($char =~ /[\x3b\x7b\x7d]/ && numberRand(1, 9999) <= 5000){
 			$out3 .= ("\n" x numberRand(1, 5));
 		}
-		
-		#print "char '$charorg' => '$char'			$isStr $skip \n";
 		
 		$out4 = substr $out4, $skip;
 		
