@@ -91,6 +91,7 @@ sub permute{
 	
 	$source = fileRead($0);
 	strTrim(\$source);
+	$source =~ s/\n+/\n/sg;
 	
 	# Read row by row.
 	my $generation = 0;
@@ -135,7 +136,6 @@ sub permute{
 			#print "sub '$subname'\n";
 			
 			my $newname = '';
-			#$newname = 'sub_'.numberRand(100, 999).'_'.$subname.'_'.numberRand(100, 999);
 			$newname = strRand(numberRand(3, 64));
 			$subs{$subname} = {
 				"name" => $subname,
@@ -162,8 +162,6 @@ sub permute{
 		if(!defined $vars{$varname}){
 						
 			my $newname = '';
-			#$newname = 'var_'.numberRand(100, 999).'_'.$varname.'_'.numberRand(100, 999);
-			#$newname = 'var_'.numberRand(100, 999).'_'.$varname;
 			$newname = strRand(numberRand(3, 64));
 			$vars{$varname} = {
 				"name" => $varname,
@@ -220,14 +218,14 @@ sub permute{
 					$out3 .= '###SUB_'.$thisSubName.'###';
 				}
 				
-				$subs{$thisSubName}{'content'} .= $substr;
+				$subs{$thisSubName}{"content"} .= $substr;
 				
 				next;
 			}
 		}
 		
 		if($thisSubName ne ''){
-			$subs{$thisSubName}{'content'} .= $char;
+			$subs{$thisSubName}{"content"} .= $char;
 		}
 		else{
 			$out3 .= $char;
@@ -241,21 +239,19 @@ sub permute{
 	my %newsubs = %subs;
 	my $maxkeys = keys %newsubs;
 	for my $subname ( sort{$a cmp $b} keys %subs){
-		my $cont = $subs{$subname}{'content'};
+		my $cont = $subs{$subname}{"content"};
 		
 		my $mixpairc = 0;
-		while($subs{$subname}{'mixpair'} eq ''){
+		while($subs{$subname}{"mixpair"} eq ''){
 			my $r = numberRand(1, $maxkeys);
 			
 			my $subc = 0;
 			for my $subname2 (keys %subs){
 				$subc++;
-				#print "\t\tsubname2 '$subname2' $subc\n";
 				if($subc == $r){
-					#print "\t\t\tsubname2 ok '$subname2' $subc\n";
-					if($subs{$subname2}{'mixpair'} eq ''){
-						$subs{$subname}{'mixpair'} = $subname2;
-						$subs{$subname2}{'mixpair'} = $subname;
+					if($subs{$subname2}{"mixpair"} eq ''){
+						$subs{$subname}{"mixpair"} = $subname2;
+						$subs{$subname2}{"mixpair"} = $subname;
 					}
 					last;
 				}
@@ -264,7 +260,7 @@ sub permute{
 			$mixpairc++;
 		}
 		
-		my $pair = $subs{$subname}{'mixpair'};
+		my $pair = $subs{$subname}{"mixpair"};
 		$out3 =~ s/\x23\x23\x23SUB_$pair\x23\x23\x23/$cont/s;
 		
 	}
@@ -275,7 +271,7 @@ sub permute{
 	for my $subname (reverse sort{
 		length($a) <=> length($b)
 	} @subskeys){
-		my $newname = $subs{$subname}{'newname'};
+		my $newname = $subs{$subname}{"newname"};
 		
 		$out3 =~ s/sub $subname/sub $newname/g;
 		$out3 =~ s/$subname\(/$newname\(/g;
@@ -289,8 +285,8 @@ sub permute{
 	for my $varname (reverse sort{
 		length($a) <=> length($b)
 	} @varskeys){
-		my $newname = $vars{$varname}{'newname'};
-		my $vartype = $vars{$varname}{'type'};
+		my $newname = $vars{$varname}{"newname"};
+		my $vartype = $vars{$varname}{"type"};
 		
 		$out3 =~ s/([\$\%\x40])$varname/$1$newname/sg;
 		
@@ -356,7 +352,7 @@ sub permute{
 				}
 				elsif($out4 =~ /^(.n)/i){
 					if(numberRand(1, 9999) <= 5000){
-						$char = '\\x'.(sprintf '%'.'02x', ord "\n");
+						$char = '\\x'.(sprintf '%'."02x", ord "\n");
 					}
 					else{
 						$char .= substr $out4, 1, 1;
@@ -367,7 +363,7 @@ sub permute{
 				}
 				elsif($out4 =~ /^(.t)/i){
 					if(numberRand(1, 9999) <= 5000){
-						$char = '\\x'.(sprintf '%'.'02x', ord "\t");
+						$char = '\\x'.(sprintf '%'."02x", ord "\t");
 					}
 					else{
 						$char .= substr $out4, 1, 1;
@@ -390,7 +386,7 @@ sub permute{
 				# Normal char, no \.
 				
 				if(numberRand(1, 9999) <= 5000){
-					$char = '\\x'.(sprintf '%'.'02x', ord $char);
+					$char = '\\x'.(sprintf '%'."02x", ord $char);
 				}
 				
 				#print "char $skip '$charorg' => '$char' \n";
@@ -400,8 +396,8 @@ sub permute{
 		
 		$out3 .= $char;
 		
-		# Insert random \n after ; { }
-		if($char =~ /[\x3b\x7b\x7d]/ && numberRand(1, 9999) <= 5000){
+		# Insert random \n after ;
+		if($char =~ /\x3b/ && numberRand(1, 9999) <= 5000){
 			$out3 .= ("\n" x numberRand(1, 5));
 		}
 		
