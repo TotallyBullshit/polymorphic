@@ -486,9 +486,18 @@ sub strTrim{
 	
 }
 
+sub numberMix{
+	my($number) = @_;
+	
+	$number =~ s/ //g;
+	
+	$number;
+}
 
+print "".numberMix(1234)." \n";
+print "".numberMix('1234 + 15')." \n";
 
-main();
+#main();
 
 
 # EOF
