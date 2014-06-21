@@ -4,7 +4,7 @@ A polymorphic perl script which replicates itself.
 This is not a virus or a worm. But it can be a basic for a perl virus. This perl script renames its sub names and variable names from generation to generation. It adds `.pl` to its new generation filename. It only generates a new copy of itself to another file.
 
 ## License
-Copyright (C) 2013 Christian Mayer (<thefox21at@gmail.com> - <http://fox21.at>)
+Copyright (C) 2013 Christian Mayer <http://fox21.at>
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
